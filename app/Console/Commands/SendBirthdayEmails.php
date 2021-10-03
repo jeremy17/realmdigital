@@ -49,7 +49,9 @@ class SendBirthdayEmails extends Command
         $employeeAPI = new EmployeeAPI();
         try {
             $employees = $employeeAPI->getAll();
+            $exclusions = $employeeAPI->getExclusions();
             $birthdays = [];
+            $employeeIds = [];
             foreach ($employees as $employeeArray) {
                 $employee = new Employee();
                 try {
@@ -65,15 +67,18 @@ class SendBirthdayEmails extends Command
                     continue;
 //                    return 1;
                 }
-                /*
-                $this->info($employee->id);
-                $this->info($employee->name);
-                $this->info($employee->lastname);
-                $this->info($employee->dateOfBirth);
-                $this->info($employee->employmentStartDate);
-                $this->info($employee->employmentEndDate);
-                */
-                if ($employee->isBirthdayToday()) {
+                if (in_array($employee->id, $employeeIds)) {
+                    continue;
+                } else {
+                    $employeeIds[] = $employee->id;
+                }
+                if ($exclusions->contains($employee->id)) {
+                    continue;
+                }
+                if (
+                    $employee->isCurrentlyEmployed()
+                    && $employee->isBirthdayToday()
+                ) {
                     if (!BirthdayEmails::where(
                         [
                             ['employee_id', $employee->id],
@@ -83,7 +88,6 @@ class SendBirthdayEmails extends Command
                         $birthdays[] = $employee;
                     }
                 }
-//                break;
             }
             $birthdayCollection = collect($birthdays);
             if ($birthdayCollection->isNotEmpty()) {

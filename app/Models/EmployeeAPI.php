@@ -22,4 +22,17 @@ class EmployeeAPI extends Model
         $response->throw();
         return $response->collect();
     }
+
+    /**
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    function getExclusions(): Collection
+    {
+        $response = Http::withOptions([
+            'verify' => true
+        ])->get('https://interview-assessment-1.realmdigital.co.za/do-not-send-birthday-wishes');
+        $response->throw();
+        return $response->collect();
+    }
+
 }

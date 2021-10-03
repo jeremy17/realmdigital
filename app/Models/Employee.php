@@ -19,23 +19,37 @@ class Employee extends Model
 
     public function isBirthdayToday() : bool
     {
-        $now = Carbon::parse('2021-10-28T00:00:00');
-//        $now = Carbon::parse('2021-12-02T00:00:00');
-//        $now = Carbon::now();
+        $today = Carbon::now();
         $dateOfBirth = Carbon::parse($this->dateOfBirth);
-        if ($now->month == $dateOfBirth->month) {
+        if ($today->month == $dateOfBirth->month) {
             if (
-                $now->month == 2
-                && $now->day == 28
+                $today->month == 2
+                && $today->day == 28
                 && $dateOfBirth->day == 29
-                && !$now->isLeapYear()
+                && !$today->isLeapYear()
             ) {
                 return true;
 
-            } elseif ($now->day == $dateOfBirth->day) {
+            } elseif ($today->day == $dateOfBirth->day) {
                 return true;
             }
         }
         return false;
+    }
+
+    public function isCurrentlyEmployed() : bool
+    {
+        $today = Carbon::now();
+        if (!is_null($this->employmentStartDate)) {
+            $employmentStartDate = Carbon::parse($this->employmentStartDate);
+            if ($today->lessThan($employmentStartDate))
+                return false;
+        }
+        if (!is_null($this->employmentEndDate)) {
+            $employmentEndDate = Carbon::parse($this->employmentEndDate);
+            if ($today->greaterThan($employmentEndDate))
+                return false;
+        }
+        return true;
     }
 }
