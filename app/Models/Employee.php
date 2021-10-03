@@ -19,9 +19,9 @@ class Employee extends Model
 
     public function isBirthdayToday() : bool
     {
-//        $now = Carbon::parse('2021-10-28T00:00:00');
+        $now = Carbon::parse('2021-10-28T00:00:00');
 //        $now = Carbon::parse('2021-12-02T00:00:00');
-        $now = Carbon::now();
+//        $now = Carbon::now();
         $dateOfBirth = Carbon::parse($this->dateOfBirth);
         if ($now->month == $dateOfBirth->month) {
             if (

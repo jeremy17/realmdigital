@@ -2,12 +2,14 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 use App\Models\EmployeeAPI;
 use App\Models\Employee;
+use App\Models\BirthdayEmails;
 use App\Mail\SendBirthdayEmail;
 
 class SendBirthdayEmails extends Command
@@ -43,6 +45,7 @@ class SendBirthdayEmails extends Command
      */
     public function handle()
     {
+        $today = Carbon::today()->toDateString();
         $employeeAPI = new EmployeeAPI();
         try {
             $employees = $employeeAPI->getAll();
@@ -71,13 +74,26 @@ class SendBirthdayEmails extends Command
                 $this->info($employee->employmentEndDate);
                 */
                 if ($employee->isBirthdayToday()) {
-                    $birthdays[] = $employee;
+                    if (!BirthdayEmails::where(
+                        [
+                            ['employee_id', $employee->id],
+                            ['sent', $today],
+                        ]
+                    )->exists()) {
+                        $birthdays[] = $employee;
+                    }
                 }
 //                break;
             }
             $birthdayCollection = collect($birthdays);
             if ($birthdayCollection->isNotEmpty()) {
                 Mail::to(env('REALMDIGITAL_TO_ADDRESS'))->send(new SendBirthdayEmail($birthdayCollection));
+                foreach ($birthdayCollection as $employee) {
+                    BirthdayEmails::create([
+                        'employee_id' => $employee->id,
+                        'sent' => $today
+                    ]);
+                }
             }
             return 0;
         }
